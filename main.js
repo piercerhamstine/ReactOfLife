@@ -1,5 +1,4 @@
 const grid = React.createElement;
-let buffer = [];
 
 class Canvas extends React.Component
 {
@@ -10,6 +9,10 @@ class Canvas extends React.Component
         this.state =
         {
             canvasRef: React.createRef(),
+            divRef: React.createRef(),
+            stopBtnRef: React.createRef(),
+            sliderRef: React.createRef(),
+
             canvasWidth: "800",
             canvasHeight: "600",
             bgColor: "#433991",
@@ -17,19 +20,21 @@ class Canvas extends React.Component
             gridWidth: 72,
             gridHeight: 54,
             cellStates: [],
-            bufferStates: []
+            bufferStates: [],
+            tickRate: 100,
+            simActive: true
         };
     };
 
     componentDidMount()
     {
         this.state.cellStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
-        buffer = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
+        this.state.bufferStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
         this.InitGrid();
 
         this.DrawGrid();
 
-        this.timerID = setInterval(() => this.tick(), 10);
+        this.timerID = setInterval(() => this.tick(), this.state.tickRate);
     };
 
     componentWillUnmount()
@@ -67,7 +72,7 @@ class Canvas extends React.Component
         {
             for(var x = 0; x < this.state.gridWidth; ++x)
             {
-                this.state.cellStates[y][x] = buffer[y][x];
+                this.state.cellStates[y][x] = this.state.bufferStates[y][x];
             }
         }
     }
@@ -94,8 +99,6 @@ class Canvas extends React.Component
 
     UpdateCells()
     {
-        //var buffer = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
-        
         for(var y = 0; y < this.state.gridHeight; ++y)
         {
             for(var x = 0; x < this.state.gridWidth; ++x)
@@ -105,15 +108,15 @@ class Canvas extends React.Component
 
                 if(currState == 0 && neighbourCellCount == 3)
                 {
-                    buffer[y][x] = 1;
+                    this.state.bufferStates[y][x] = 1;
                 }
                 else if(currState == 1 && (neighbourCellCount < 2 || neighbourCellCount > 3))
                 {
-                    buffer[y][x] = 0;
+                    this.state.bufferStates[y][x] = 0;
                 }
                 else
                 {
-                    buffer[y][x] = currState;
+                    this.state.bufferStates[y][x] = currState;
                 }
             }
         }
@@ -145,23 +148,68 @@ class Canvas extends React.Component
         }
     };
 
+    UpdateTickRate()
+    {
+        this.state.tickRate = this.state.sliderRef.current.value;
+        clearInterval(this.timerID);
+        this.timerID = setInterval(() => this.tick(), this.state.tickRate);
+    }
+
     tick()
     {
-        this.UpdateCells();
+        if(this.state.simActive)
+        {
+            this.UpdateCells();
+        };
     };
+
+    StartStop()
+    {
+        this.state.simActive = !this.state.simActive;
+        this.state.stopBtnRef.current.innerText = (this.state.simActive)?"Stop":"Start";
+    }
 
     render()
     {
-        var canv = React.createElement('canvas',
-        {
-            ref: this.state.canvasRef,
-            id: "board",
-            width: this.state.canvasWidth,
-            height: this.state.canvasHeight,
-            style:{backgroundColor: this.state.bgColor}
-        }, null);
+        var div = React.createElement('div', {ref: this.state.divRef}, 
+            React.createElement('canvas',
+            {
+                ref: this.state.canvasRef,
+                id: "board",
+                width: this.state.canvasWidth,
+                height: this.state.canvasHeight,
+                style:{backgroundColor: this.state.bgColor}
+            }, null),
 
-        return canv;
+            React.createElement('button', 
+            {
+                onClick: () => this.StartStop(),
+                
+                ref: this.state.stopBtnRef,
+                style:
+                {
+                    id: 'startStop',
+                    backgroundColor: "#000000",
+                    color: "white",
+                    cursor: "pointer",
+                    padding: "10px 50px",
+                    display: "inline-block",
+                    textDecoration: "none",
+                    border: "none"
+                }
+            }, "Stop"),
+
+            React.createElement('input', 
+            {
+                ref: this.state.sliderRef,
+                onChange: () => this.UpdateTickRate(),
+                type:'range', 
+                min:'10',
+                max:'100',
+            }, null)
+        );
+
+        return div;
     }
 };
 
