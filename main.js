@@ -11,6 +11,7 @@ class Canvas extends React.Component
             canvasRef: React.createRef(),
             divRef: React.createRef(),
             stopBtnRef: React.createRef(),
+            generateBtnRef: React.createRef(),
             sliderRef: React.createRef(),
 
             canvasWidth: "800",
@@ -169,6 +170,19 @@ class Canvas extends React.Component
         this.state.stopBtnRef.current.innerText = (this.state.simActive)?"Stop":"Start";
     }
 
+    GenerateBoard()
+    {
+        // Stop the simulation
+        this.state.simActive = false;
+        this.state.stopBtnRef.current.innerText = (this.state.simActive)?"Stop":"Start";
+        
+        this.state.cellStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
+        this.state.bufferStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
+        this.InitGrid();
+
+        this.DrawGrid();
+    }
+
     render()
     {
         var div = React.createElement('div', {ref: this.state.divRef}, 
@@ -199,13 +213,31 @@ class Canvas extends React.Component
                 }
             }, "Stop"),
 
+            React.createElement('button', 
+            {
+                onClick: () => this.GenerateBoard(),
+                
+                ref: this.state.generateBtnRef,
+                style:
+                {
+                    id: 'generate',
+                    backgroundColor: "#000000",
+                    color: "white",
+                    cursor: "pointer",
+                    padding: "10px 50px",
+                    display: "inline-block",
+                    textDecoration: "none",
+                    border: "none"
+                }
+            }, "Generate"),
+
             React.createElement('input', 
             {
                 ref: this.state.sliderRef,
                 onChange: () => this.UpdateTickRate(),
                 type:'range', 
                 min:'10',
-                max:'100',
+                max:'1000',
             }, null)
         );
 
