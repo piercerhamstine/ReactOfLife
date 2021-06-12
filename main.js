@@ -142,8 +142,6 @@ class Canvas extends React.Component
         var x = Math.round(e.offsetX/11);
         var y = Math.round(e.offsetY/11);
 
-        console.log(x + " " + y);
-
         if(x >= this.state.gridWidth)
         {
             x = this.state.gridWidth-1;
@@ -163,8 +161,6 @@ class Canvas extends React.Component
         }
 
         this.DrawGrid();
-
-        console.log(x + " "+ y);
     }
 
     DrawGrid()
