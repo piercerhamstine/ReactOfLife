@@ -13,6 +13,7 @@ class Canvas extends React.Component
             stopBtnRef: React.createRef(),
             generateBtnRef: React.createRef(),
             sliderRef: React.createRef(),
+            stepForwardBtnRef: React.createRef(),
 
             canvasWidth: "800",
             canvasHeight: "600",
@@ -20,17 +21,26 @@ class Canvas extends React.Component
 
             gridWidth: 72,
             gridHeight: 54,
+            cellSize: 10,
             cellStates: [],
             bufferStates: [],
             tickRate: 100,
-            simActive: true
+            simActive: true,
+            isDrawing: false
         };
+
+        this.UpdateCellState = this.UpdateCellState.bind(this);
+
+        // Calculate canvas width and height.
+        this.state.canvasWidth = this.state.gridWidth+(this.state.gridWidth*this.state.cellSize);
+        this.state.canvasHeight = this.state.gridHeight + (this.state.gridHeight*this.state.cellSize);
     };
 
     componentDidMount()
     {
         this.state.cellStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
         this.state.bufferStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
+
         this.InitGrid();
 
         this.DrawGrid();
@@ -127,6 +137,36 @@ class Canvas extends React.Component
         this.DrawGrid();
     };
 
+    UpdateCellState(e)
+    {
+        var x = Math.round(e.offsetX/11);
+        var y = Math.round(e.offsetY/11);
+
+        console.log(x + " " + y);
+
+        if(x >= this.state.gridWidth)
+        {
+            x = this.state.gridWidth-1;
+        }
+        if(y >= this.state.gridHeight)
+        {
+            y = this.state.gridHeight-1;
+        }
+
+        if(this.state.cellStates[y][x] == 1)
+        {
+            this.state.cellStates[y][x] = 0;
+        }
+        else
+        {
+            this.state.cellStates[y][x] = 1;
+        }
+
+        this.DrawGrid();
+
+        console.log(x + " "+ y);
+    }
+
     DrawGrid()
     {
         var ctx = this.state.canvasRef.current.getContext('2d');
@@ -170,12 +210,21 @@ class Canvas extends React.Component
         this.state.stopBtnRef.current.innerText = (this.state.simActive)?"Stop":"Start";
     }
 
-    GenerateBoard()
+    TickOnce()
     {
         // Stop the simulation
         this.state.simActive = false;
         this.state.stopBtnRef.current.innerText = (this.state.simActive)?"Stop":"Start";
-        
+
+        this.UpdateCells();
+    }
+
+    RegenerateBoard()
+    {
+        // Stop the simulation
+        this.state.simActive = false;
+        this.state.stopBtnRef.current.innerText = (this.state.simActive)?"Stop":"Start";
+
         this.state.cellStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
         this.state.bufferStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
         this.InitGrid();
@@ -188,13 +237,19 @@ class Canvas extends React.Component
         var div = React.createElement('div', {ref: this.state.divRef}, 
             React.createElement('canvas',
             {
+                onMouseDown: e =>
+                {
+                    this.UpdateCellState(e.nativeEvent);
+                },
+
                 ref: this.state.canvasRef,
                 id: "board",
                 width: this.state.canvasWidth,
                 height: this.state.canvasHeight,
-                style:{backgroundColor: this.state.bgColor}
+                style:{backgroundColor: this.state.bgColor},
             }, null),
 
+            // Start/Stop button
             React.createElement('button', 
             {
                 onClick: () => this.StartStop(),
@@ -213,9 +268,10 @@ class Canvas extends React.Component
                 }
             }, "Stop"),
 
+            // Generate new board button.
             React.createElement('button', 
             {
-                onClick: () => this.GenerateBoard(),
+                onClick: () => this.RegenerateBoard(),
                 
                 ref: this.state.generateBtnRef,
                 style:
@@ -231,13 +287,33 @@ class Canvas extends React.Component
                 }
             }, "Generate"),
 
+            // Step forward in simulation button
+            React.createElement('button', 
+            {
+                onClick: () => this.TickOnce(),
+                
+                ref: this.state.stepForwardBtnRef,
+                style:
+                {
+                    id: 'stepForward',
+                    backgroundColor: "#000000",
+                    color: "white",
+                    cursor: "pointer",
+                    padding: "10px 50px",
+                    display: "inline-block",
+                    textDecoration: "none",
+                    border: "none"
+                }
+            }, "Step Forward"),
+
+            // Tickrate slider
             React.createElement('input', 
             {
                 ref: this.state.sliderRef,
                 onChange: () => this.UpdateTickRate(),
                 type:'range', 
                 min:'10',
-                max:'1000',
+                max:'100',
             }, null)
         );
 
