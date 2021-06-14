@@ -14,6 +14,7 @@ class Canvas extends React.Component
             generateBtnRef: React.createRef(),
             sliderRef: React.createRef(),
             stepForwardBtnRef: React.createRef(),
+            clearBtnRef: React.createRef(),
 
             canvasWidth: "800",
             canvasHeight: "600",
@@ -139,9 +140,10 @@ class Canvas extends React.Component
 
     UpdateCellState(e)
     {
-        var x = Math.round(e.offsetX/11);
-        var y = Math.round(e.offsetY/11);
+        var x = Math.trunc(e.offsetX/11);
+        var y = Math.trunc(e.offsetY/11);
 
+        // Keep within array bounds
         if(x >= this.state.gridWidth)
         {
             x = this.state.gridWidth-1;
@@ -151,9 +153,17 @@ class Canvas extends React.Component
             y = this.state.gridHeight-1;
         }
 
-        if(this.state.cellStates[y][x] == 1)
+        // Check if we are drawing to allow for clearing alive cells.
+        if(!this.state.isDrawing)
         {
-            this.state.cellStates[y][x] = 0;
+            if(this.state.cellStates[y][x] == 1)
+            {
+                this.state.cellStates[y][x] = 0;
+            }
+            else
+            {
+                this.state.cellStates[y][x] = 1;
+            }
         }
         else
         {
@@ -217,13 +227,33 @@ class Canvas extends React.Component
 
     RegenerateBoard()
     {
-        // Stop the simulation
-        this.state.simActive = false;
-        this.state.stopBtnRef.current.innerText = (this.state.simActive)?"Stop":"Start";
+        if(this.state.simActive)
+        {
+            this.StartStop();
+        }
 
-        this.state.cellStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
-        this.state.bufferStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
+        this.ClearBoard();
+
         this.InitGrid();
+
+        this.DrawGrid();
+    }
+
+    ClearBoard()
+    {
+        if(this.state.simActive)
+        {
+            this.StartStop();
+        }
+
+        for(var y = 0; y < this.state.gridHeight; ++y)
+        {
+            for(var x = 0; x < this.state.gridWidth; ++x)
+            {
+                this.state.cellStates[y][x] = 0;
+                this.state.cellStates[y][x] = 0;
+            }
+        }
 
         this.DrawGrid();
     }
@@ -236,6 +266,26 @@ class Canvas extends React.Component
                 onMouseDown: e =>
                 {
                     this.UpdateCellState(e.nativeEvent);
+                    
+                    this.state.isDrawing = true;
+
+                    if(this.state.simActive)
+                    {
+                        this.StartStop();
+                    }
+                },
+
+                onMouseUp: e =>
+                {
+                    this.state.isDrawing = false;
+                },
+
+                onMouseMove: e =>
+                {
+                    if(this.state.isDrawing)
+                    {
+                        this.UpdateCellState(e.nativeEvent);
+                    }
                 },
 
                 ref: this.state.canvasRef,
@@ -282,6 +332,25 @@ class Canvas extends React.Component
                     border: "none"
                 }
             }, "Generate"),
+
+            // Clear current board button.
+            React.createElement('button', 
+            {
+                onClick: () => this.ClearBoard(),
+                
+                ref: this.state.clearBtnRef,
+                style:
+                {
+                    id: 'clear',
+                    backgroundColor: "#000000",
+                    color: "white",
+                    cursor: "pointer",
+                    padding: "10px 50px",
+                    display: "inline-block",
+                    textDecoration: "none",
+                    border: "none"
+                }
+            }, "Clear"),
 
             // Step forward in simulation button
             React.createElement('button', 
