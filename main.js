@@ -15,6 +15,8 @@ class Canvas extends React.Component
             sliderRef: React.createRef(),
             stepForwardBtnRef: React.createRef(),
             clearBtnRef: React.createRef(),
+            deadColorRef: React.createRef(),
+            aliveColorRef: React.createRef(),
 
             canvasWidth: "800",
             canvasHeight: "600",
@@ -27,7 +29,10 @@ class Canvas extends React.Component
             bufferStates: [],
             tickRate: 100,
             simActive: true,
-            isDrawing: false
+            isDrawing: false,
+
+            colorAlive: "#000000",
+            colorDead: "#FFFFFF"
         };
 
         this.UpdateCellState = this.UpdateCellState.bind(this);
@@ -183,11 +188,11 @@ class Canvas extends React.Component
             {
                 if(this.state.cellStates[y][x] == 1)
                 {
-                    ctx.fillStyle = "#000000";
+                    ctx.fillStyle = this.state.colorAlive;
                 }
                 else
                 {
-                    ctx.fillStyle = "#FFFFFF";
+                    ctx.fillStyle = this.state.colorDead;
                 };
         
                 ctx.fillRect(x*11, y*11, 10, 10)
@@ -256,6 +261,16 @@ class Canvas extends React.Component
         }
 
         this.DrawGrid();
+    }
+
+    UpdateAliveStateColor()
+    {
+        this.state.colorAlive = this.state.aliveColorRef.current.value;
+    }
+
+    UpdateDeadStateColor()
+    {
+        this.state.colorDead = this.state.deadColorRef.current.value;
     }
 
     render()
@@ -379,7 +394,30 @@ class Canvas extends React.Component
                 type:'range', 
                 min:'10',
                 max:'100',
-            }, null)
+                defaultValue: '100'
+            }, null),
+
+            // Dead state color
+            React.createElement('input', 
+            {
+                onInput: () => this.UpdateDeadStateColor(),
+                ref: this.state.deadColorRef,
+                type:'color',
+                defaultValue:this.state.colorDead
+            }, null),
+
+            React.createElement('label', null, "Dead"),
+
+            // Alive state color
+            React.createElement('input', 
+            {
+                onInput: () => this.UpdateAliveStateColor(),
+                ref: this.state.aliveColorRef,
+                type:'color',
+                defaultValue:this.state.colorAlive
+            }, null),
+
+            React.createElement('label', null, "Alive"),
         );
 
         return div;
