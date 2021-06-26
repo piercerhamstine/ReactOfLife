@@ -276,6 +276,7 @@ class Canvas extends React.Component
     render()
     {
         var div = React.createElement('div', {ref: this.state.divRef}, 
+            // Canvas element  
             React.createElement('canvas',
             {
                 onMouseDown: e =>
@@ -307,7 +308,17 @@ class Canvas extends React.Component
                 id: "board",
                 width: this.state.canvasWidth,
                 height: this.state.canvasHeight,
-                style:{backgroundColor: this.state.bgColor},
+                style:
+                {
+                    backgroundColor: this.state.bgColor,
+                    paddingLeft: 0,
+                    top: '50px',
+                    bottom: 0,
+                    paddingRight: 0,
+                    marginLeft: 'auto',
+                    marginRight: 'auto',
+                    display: 'block',
+                },
             }, null),
 
             // Start/Stop button
@@ -316,9 +327,9 @@ class Canvas extends React.Component
                 onClick: () => this.StartStop(),
                 
                 ref: this.state.stopBtnRef,
+                id: 'startStop',
                 style:
                 {
-                    id: 'startStop',
                     backgroundColor: "#000000",
                     color: "white",
                     cursor: "pointer",
@@ -335,9 +346,9 @@ class Canvas extends React.Component
                 onClick: () => this.RegenerateBoard(),
                 
                 ref: this.state.generateBtnRef,
+                id: 'generate',
                 style:
                 {
-                    id: 'generate',
                     backgroundColor: "#000000",
                     color: "white",
                     cursor: "pointer",
@@ -354,9 +365,9 @@ class Canvas extends React.Component
                 onClick: () => this.ClearBoard(),
                 
                 ref: this.state.clearBtnRef,
+                id: 'clear',
                 style:
                 {
-                    id: 'clear',
                     backgroundColor: "#000000",
                     color: "white",
                     cursor: "pointer",
@@ -373,9 +384,9 @@ class Canvas extends React.Component
                 onClick: () => this.TickOnce(),
                 
                 ref: this.state.stepForwardBtnRef,
+                id: 'stepForward',
                 style:
                 {
-                    id: 'stepForward',
                     backgroundColor: "#000000",
                     color: "white",
                     cursor: "pointer",

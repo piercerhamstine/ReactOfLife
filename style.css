@@ -1,0 +1,10 @@
+.blackBar
+{
+    width: auto;
+    height: 50px;
+    color: white;
+    text-align: center;
+    vertical-align: middle;
+    margin: 0;
+    background-color: #000;
+}
