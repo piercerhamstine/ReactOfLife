@@ -8,6 +8,7 @@ class Canvas extends React.Component
 
         this.state =
         {
+            // React references
             canvasRef: React.createRef(),
             divRef: React.createRef(),
             stopBtnRef: React.createRef(),
@@ -18,19 +19,25 @@ class Canvas extends React.Component
             deadColorRef: React.createRef(),
             aliveColorRef: React.createRef(),
 
+            // Canvas settings
             canvasWidth: "800",
             canvasHeight: "600",
             bgColor: "#433991",
-
             gridWidth: 72,
             gridHeight: 54,
             cellSize: 10,
+
+            // Cell state arrays
             cellStates: [],
             bufferStates: [],
+            cellStateHistory: [],
+
+            
             tickRate: 100,
             simActive: true,
             isDrawing: false,
 
+            // Cell color settings
             colorAlive: "#000000",
             colorDead: "#FFFFFF"
         };
@@ -46,7 +53,7 @@ class Canvas extends React.Component
     {
         this.state.cellStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
         this.state.bufferStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
-
+        this.state.cellStateHistory = new Array(10);
         this.InitGrid();
 
         this.DrawGrid();
@@ -228,6 +235,17 @@ class Canvas extends React.Component
         this.state.stopBtnRef.current.innerText = (this.state.simActive)?"Stop":"Start";
 
         this.UpdateCells();
+    }
+
+    TickBackwards()
+    {        
+        // Stop the simulation
+        this.state.simActive = false;
+        this.state.stopBtnRef.current.innerText = (this.state.simActive)?"Stop":"Start";
+
+        // Move back one in state history array, check for out of bounds.
+        // Draw grid
+        this.DrawGrid();
     }
 
     RegenerateBoard()
@@ -449,7 +467,6 @@ class Grid extends React.Component
     render()
     {
         var canvas = React.createElement(Canvas, null, null);
-
         
         return canvas;
     };
