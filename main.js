@@ -15,6 +15,7 @@ class Canvas extends React.Component
             generateBtnRef: React.createRef(),
             sliderRef: React.createRef(),
             stepForwardBtnRef: React.createRef(),
+            stepBackwardBtnRef: React.createRef(),
             clearBtnRef: React.createRef(),
             deadColorRef: React.createRef(),
             aliveColorRef: React.createRef(),
@@ -31,7 +32,7 @@ class Canvas extends React.Component
             cellStates: [],
             bufferStates: [],
             cellStateHistory: [],
-
+            historyIndex: 0,
             
             tickRate: 100,
             simActive: true,
@@ -51,12 +52,13 @@ class Canvas extends React.Component
 
     componentDidMount()
     {
-        this.state.cellStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
-        this.state.bufferStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
-        this.state.cellStateHistory = new Array(10);
+        this.InitStateHistoryArray();
         this.InitGrid();
-
         this.DrawGrid();
+
+        // DEBUG
+        this.state.simActive = false;
+        //
 
         this.timerID = setInterval(() => this.tick(), this.state.tickRate);
     };
@@ -81,6 +83,9 @@ class Canvas extends React.Component
     // Initialize the grid with random states.
     InitGrid()
     {
+        this.state.cellStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
+        this.state.bufferStates = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
+
         for(var y = 0; y < this.state.gridHeight; ++y)
         {
             for(var x = 0; x < this.state.gridWidth; ++x)
@@ -90,15 +95,51 @@ class Canvas extends React.Component
         }
     };
 
-    CopyBuffer()
+    InitStateHistoryArray()
+    {
+        this.state.cellStateHistory = new Array(10);
+
+        //**Change hard-coded length
+        for(let i = 0; i < 10; ++i)
+        {
+            this.state.cellStateHistory[i] = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
+        }
+
+        this.UpdateStepBackwardBtn();
+    }
+
+    CopyArrayInto(arr1, arr2)
     {
         for(var y = 0; y < this.state.gridHeight; ++y)
         {
-            for(var x = 0; x < this.state.gridWidth; ++x)
-            {
-                this.state.cellStates[y][x] = this.state.bufferStates[y][x];
-            }
+            arr1[y] = arr2[y].slice();
         }
+    }
+
+    CopyStateToHistory()
+    {
+        this.CopyArrayInto(this.state.cellStateHistory[this.state.historyIndex], this.state.cellStates);
+        this.state.historyIndex++;
+    }
+
+    CopyHistoryToState()
+    {
+        this.state.historyIndex--;
+
+        if(this.state.historyIndex < 0)
+        {
+            this.state.historyIndex = 0;
+        } 
+
+        for(var y = 0; y < this.state.gridHeight; ++y)
+        {
+            this.state.cellStates[y] = this.state.cellStateHistory[this.state.historyIndex][y].slice();
+        }
+    }
+
+    ShiftHistoryArray()
+    {
+        
     }
 
     CheckNeighbourCells(x, y)
@@ -123,6 +164,8 @@ class Canvas extends React.Component
 
     UpdateCells()
     {
+        this.CopyStateToHistory();
+
         for(var y = 0; y < this.state.gridHeight; ++y)
         {
             for(var x = 0; x < this.state.gridWidth; ++x)
@@ -145,7 +188,7 @@ class Canvas extends React.Component
             }
         }
 
-        this.CopyBuffer();
+        this.CopyArrayInto(this.state.cellStates, this.state.bufferStates);
 
         this.DrawGrid();
     };
@@ -235,6 +278,8 @@ class Canvas extends React.Component
         this.state.stopBtnRef.current.innerText = (this.state.simActive)?"Stop":"Start";
 
         this.UpdateCells();
+
+        this.UpdateStepBackwardBtn();
     }
 
     TickBackwards()
@@ -244,8 +289,12 @@ class Canvas extends React.Component
         this.state.stopBtnRef.current.innerText = (this.state.simActive)?"Stop":"Start";
 
         // Move back one in state history array, check for out of bounds.
+        this.CopyHistoryToState();
+
         // Draw grid
         this.DrawGrid();
+
+        this.UpdateStepBackwardBtn();
     }
 
     RegenerateBoard()
@@ -289,6 +338,11 @@ class Canvas extends React.Component
     UpdateDeadStateColor()
     {
         this.state.colorDead = this.state.deadColorRef.current.value;
+    }
+
+    UpdateStepBackwardBtn()
+    {
+        this.state.stepBackwardBtnRef.current.disabled = (this.state.historyIndex > 0)?false:true;
     }
 
     render()
@@ -346,16 +400,7 @@ class Canvas extends React.Component
                 
                 ref: this.state.stopBtnRef,
                 id: 'startStop',
-                style:
-                {
-                    backgroundColor: "#000000",
-                    color: "white",
-                    cursor: "pointer",
-                    padding: "10px 50px",
-                    display: "inline-block",
-                    textDecoration: "none",
-                    border: "none"
-                }
+                className: "button",
             }, "Stop"),
 
             // Generate new board button.
@@ -365,16 +410,7 @@ class Canvas extends React.Component
                 
                 ref: this.state.generateBtnRef,
                 id: 'generate',
-                style:
-                {
-                    backgroundColor: "#000000",
-                    color: "white",
-                    cursor: "pointer",
-                    padding: "10px 50px",
-                    display: "inline-block",
-                    textDecoration: "none",
-                    border: "none"
-                }
+                className: "button",
             }, "Generate"),
 
             // Clear current board button.
@@ -384,17 +420,20 @@ class Canvas extends React.Component
                 
                 ref: this.state.clearBtnRef,
                 id: 'clear',
-                style:
-                {
-                    backgroundColor: "#000000",
-                    color: "white",
-                    cursor: "pointer",
-                    padding: "10px 50px",
-                    display: "inline-block",
-                    textDecoration: "none",
-                    border: "none"
-                }
+                className: "button",
             }, "Clear"),
+
+            // Step backward in simulation button
+            React.createElement('button', 
+            {
+                onClick: () => this.TickBackwards(),
+
+                ref: this.state.stepBackwardBtnRef,
+                id: 'stepForward',
+                disabled: false,
+                className: "button",
+
+            }, "Step Backward"),
 
             // Step forward in simulation button
             React.createElement('button', 
@@ -403,16 +442,7 @@ class Canvas extends React.Component
                 
                 ref: this.state.stepForwardBtnRef,
                 id: 'stepForward',
-                style:
-                {
-                    backgroundColor: "#000000",
-                    color: "white",
-                    cursor: "pointer",
-                    padding: "10px 50px",
-                    display: "inline-block",
-                    textDecoration: "none",
-                    border: "none"
-                }
+                className: "button",
             }, "Step Forward"),
 
             // Tickrate slider

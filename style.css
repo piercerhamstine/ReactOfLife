@@ -8,3 +8,25 @@
     margin: 0;
     background-color: #000;
 }
+
+.button
+{
+    background-color: #000000;
+    color: white;
+    cursor: pointer;
+    padding: 10px 50px;
+    display: inline-block;
+    text-decoration: none;
+    border: none;
+}
+
+.button:disabled
+{
+    background-color: gray;
+    color: white;
+    cursor: pointer;
+    padding: 10px 50px;
+    display: inline-block;
+    text-decoration: none;
+    border: none;
+}
