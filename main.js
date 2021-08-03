@@ -52,13 +52,9 @@ class Canvas extends React.Component
 
     componentDidMount()
     {
-        this.InitStateHistoryArray();
         this.InitGrid();
+        this.InitStateHistoryArray();
         this.DrawGrid();
-
-        // DEBUG
-        this.state.simActive = false;
-        //
 
         this.timerID = setInterval(() => this.tick(), this.state.tickRate);
     };
@@ -105,6 +101,8 @@ class Canvas extends React.Component
             this.state.cellStateHistory[i] = this.CreateArray2D(this.state.gridWidth, this.state.gridHeight);
         }
 
+        this.CopyStateToHistory();
+        this.state.historyIndex = 0;
         this.UpdateStepBackwardBtn();
     }
 
@@ -118,8 +116,20 @@ class Canvas extends React.Component
 
     CopyStateToHistory()
     {
+        // TODO::Remove hard coded length.
+        if(this.state.historyIndex == 9)
+        {
+            this.ShiftHistoryArray();
+        }
+        
         this.CopyArrayInto(this.state.cellStateHistory[this.state.historyIndex], this.state.cellStates);
-        this.state.historyIndex++;
+
+        if(this.state.historyIndex < 9)
+        {
+            this.state.historyIndex++;
+        }
+
+        this.UpdateStepBackwardBtn();
     }
 
     CopyHistoryToState()
@@ -135,11 +145,18 @@ class Canvas extends React.Component
         {
             this.state.cellStates[y] = this.state.cellStateHistory[this.state.historyIndex][y].slice();
         }
+
+
+        this.UpdateStepBackwardBtn();
     }
 
+    // Shifts the history array down
     ShiftHistoryArray()
     {
-        
+        for(let i = 0; i < this.state.cellStateHistory.length-1; ++i)
+        {
+            this.state.cellStateHistory[i] = this.state.cellStateHistory[i+1].slice();
+        };
     }
 
     CheckNeighbourCells(x, y)
@@ -193,6 +210,7 @@ class Canvas extends React.Component
         this.DrawGrid();
     };
 
+    // Updates the state of a specific cell within mouse bounds.
     UpdateCellState(e)
     {
         var x = Math.trunc(e.offsetX/11);
@@ -278,8 +296,6 @@ class Canvas extends React.Component
         this.state.stopBtnRef.current.innerText = (this.state.simActive)?"Stop":"Start";
 
         this.UpdateCells();
-
-        this.UpdateStepBackwardBtn();
     }
 
     TickBackwards()
@@ -293,8 +309,6 @@ class Canvas extends React.Component
 
         // Draw grid
         this.DrawGrid();
-
-        this.UpdateStepBackwardBtn();
     }
 
     RegenerateBoard()
